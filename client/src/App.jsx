@@ -1,11 +1,33 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./App.css";
 
 function App() {
   const [name, setName] = useState("");
   const [rating, setRating] = useState("5");
   const [reviewText, setReviewText] = useState("");
+  const [reviews, setReviews] = useState([]);
+
+  
+useEffect(() => {
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch("http://localhost:3000/reviews");
+
+      if (!response.ok) {
+        throw new Error("Failed to load reviews.");
+      }
+
+      const data = await response.json();
+      setReviews(data);
+    } catch (error) {
+      console.error("Error loading reviews:", error);
+    }
+  };
+
+  fetchReviews();
+}, []);
+
   
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -34,6 +56,7 @@ function App() {
         throw new Error(data.error || "Failed to submit review.");
       }
 
+      setReviews((currentReviews) => [...currentReviews, data]);
       alert(`Thanks for your review, ${data.name}!`);
 
       setName("");
@@ -84,6 +107,22 @@ function App() {
 
         <button type="submit">Submit Review</button>
       </form>
+      
+<section className="reviews-section">
+  <h2>Submitted Reviews</h2>
+
+  {reviews.length === 0 ? (
+    <p>No reviews yet. Be the first to leave one!</p>
+  ) : (
+    reviews.map((review) => (
+      <article className="review-card" key={review.id}>
+        <h3>{review.name}</h3>
+        <p>{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</p>
+        <p>{review.text}</p>
+      </article>
+    ))
+  )}
+</section>
     </main>
   );
 }
